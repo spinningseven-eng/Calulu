@@ -37,29 +37,25 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Calc(vm: CalcVM = viewModel()) {
-
     Column(
         Modifier.fillMaxSize().background(Bg).padding(16.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
-        // ЭКРАН
+        // ===== ЭКРАН (DISPLAY) =====
         Column(
             Modifier.fillMaxWidth().weight(1f),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.Bottom
         ) {
-            // История
             Text(
                 text = vm.history, color = Hint, fontSize = 20.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End
             )
-            // Текущий оператор
             Text(
                 text = vm.op, color = Orange, fontSize = 26.sp, maxLines = 1,
                 modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End
             )
-            // Текущее число
             Text(
                 text = vm.display, color = Color.White, fontSize = 60.sp,
                 fontWeight = FontWeight.Light, maxLines = 1,
@@ -69,7 +65,7 @@ fun Calc(vm: CalcVM = viewModel()) {
             Spacer(Modifier.height(12.dp))
         }
 
-        // КЛАВИАТУРА
+        // ===== КЛАВИАТУРА (KEYBOARD) =====
         val rows = listOf(
             listOf("C", "±", "%", "÷"),
             listOf("7", "8", "9", "×"),
@@ -78,24 +74,29 @@ fun Calc(vm: CalcVM = viewModel()) {
             listOf("⌫", "0", ".", "=")
         )
 
-        // Проходимся по каждому ряду
-        rows.forEach { r ->
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Проходимся по каждой кнопке в ряду
-                r.forEach { label ->
-                    Key(label, Modifier.weight(1f)) {
-                        when (label) {
-                            "C" -> vm.clear()
-                            "⌫" -> vm.backspace()
-                            "±" -> vm.sign()
-                            "%" -> vm.percent()
-                            "=" -> vm.equals()
-                            "." -> vm.dot()
-                            "+", "-", "×", "÷" -> vm.operator(label)
-                            else -> vm.digit(label[0])
+        // Общая колонка для клавиатуры, которая забирает нужную высоту
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(2f), // Даем клавиатуре 2/3 экрана (экран забирает 1/3)
+            verticalArrangement = Arrangement.spacedBy(8.dp) // Отступ между рядами
+        ) {
+            rows.forEach { r ->
+                Row(
+                    // Каждый ряд занимает равную долю высоты клавиатуры
+                    Modifier.fillMaxWidth().weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp) // Отступ между кнопками в ряду
+                ) {
+                    r.forEach { label ->
+                        Key(label, Modifier.weight(1f)) {
+                            when (label) {
+                                "C" -> vm.clear()
+                                "⌫" -> vm.backspace()
+                                "±" -> vm.sign()
+                                "%" -> vm.percent()
+                                "=" -> vm.equals()
+                                "." -> vm.dot()
+                                "+", "-", "×", "÷" -> vm.operator(label)
+                                else -> vm.digit(label[0])
+                            }
                         }
                     }
                 }
@@ -112,10 +113,13 @@ private fun Key(label: String, mod: Modifier, onClick: () -> Unit) {
         else -> Dark to Color.White
     }
 
-    // Сама кнопка
     Button(
         onClick = onClick,
-        modifier = mod.aspectRatio(1f).heightIn(min = 60.dp),
+        // weight(1f) делает кнопки одинаковыми по ширине.
+        // aspectRatio(1f, matchHeightConstraintsFirst = true) заставляет кнопку
+        // подстраивать ширину под высоту, чтобы оставаться ровной, но при этом
+        // четко вписываться в границы ряда.
+        modifier = mod.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true),
         shape = CircleShape,
         colors = ButtonDefaults.buttonColors(
             containerColor = bg,
